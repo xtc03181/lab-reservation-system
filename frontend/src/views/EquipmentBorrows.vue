@@ -9,10 +9,19 @@
           <el-option label="已驳回" value="REJECTED" />
           <el-option label="已归还" value="RETURNED" />
         </el-select>
+        <el-button @click="exportBorrows">导出 Excel</el-button>
         <el-button v-if="isStudent" type="primary" @click="openDialog">新增借用申请</el-button>
       </div>
     </div>
     <div class="panel">
+      <el-alert
+        v-if="noticeText"
+        class="page-alert"
+        :title="noticeText"
+        type="warning"
+        show-icon
+        :closable="false"
+      />
       <el-table :data="pagedRows" border>
         <el-table-column label="申请人">
           <template #default="{ row }">{{ userName(row.userId) }}</template>
@@ -85,6 +94,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createEquipmentBorrow, listEquipment, listEquipmentBorrows, listUsers, reviewEquipmentBorrow } from '../api/modules'
 import { useUserStore } from '../stores/user'
+import { exportCsv } from '../utils/exportCsv'
 
 const userStore = useUserStore()
 const isStudent = computed(() => userStore.user?.role === 'STUDENT')
@@ -110,6 +120,13 @@ const userName = id => {
 }
 const filteredRows = computed(() => statusFilter.value ? rows.value.filter(row => row.status === statusFilter.value) : rows.value)
 const pagedRows = computed(() => filteredRows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
+const pendingCount = computed(() => rows.value.filter(row => row.status === 'PENDING').length)
+const resultCount = computed(() => rows.value.filter(row => ['APPROVED', 'REJECTED', 'RETURNED'].includes(row.status)).length)
+const noticeText = computed(() => {
+  if (canReview.value && pendingCount.value) return `当前有 ${pendingCount.value} 条设备借用申请待审核`
+  if (isStudent.value && resultCount.value) return `你有 ${resultCount.value} 条设备借用申请已有处理结果`
+  return ''
+})
 
 const load = async () => {
   const tasks = [listEquipmentBorrows(), listEquipment()]
@@ -157,17 +174,36 @@ const submitReview = async () => {
   load()
 }
 
+const exportBorrows = () => {
+  exportCsv('设备借用记录.csv', [
+    { label: '申请人', value: row => userName(row.userId) },
+    { label: '设备', value: row => equipmentName(row.equipmentId) },
+    { label: '数量', value: 'borrowCount' },
+    { label: '借用时间', value: 'borrowTime' },
+    { label: '归还时间', value: 'returnTime' },
+    { label: '用途', value: 'purpose' },
+    { label: '状态', value: row => statusText(row.status) },
+    { label: '处理意见', value: 'reviewOpinion' }
+  ], filteredRows.value)
+}
+
 onMounted(load)
 </script>
 
 <style scoped>
 .toolbar-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .pagination {
   margin-top: 14px;
   justify-content: flex-end;
+}
+
+.page-alert {
+  margin-bottom: 14px;
 }
 </style>

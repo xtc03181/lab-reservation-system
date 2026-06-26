@@ -2,7 +2,10 @@
   <div>
     <div class="toolbar">
       <h2 class="page-title">操作日志</h2>
-      <el-input v-model="keyword" placeholder="搜索模块/操作/账号/内容" clearable style="width: 280px" />
+      <div class="toolbar-actions">
+        <el-input v-model="keyword" placeholder="搜索模块/操作/账号/内容" clearable style="width: 280px" />
+        <el-button @click="exportLogs">导出 Excel</el-button>
+      </div>
     </div>
     <div class="panel">
       <el-table :data="pagedRows" border>
@@ -26,6 +29,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { listOperationLogs } from '../api/modules'
+import { exportCsv } from '../utils/exportCsv'
 
 const rows = ref([])
 const keyword = ref('')
@@ -44,10 +48,25 @@ const load = async () => {
   rows.value = [...data].sort((a, b) => (b.id || 0) - (a.id || 0))
 }
 
+const exportLogs = () => {
+  exportCsv('操作日志.csv', [
+    { label: '模块', value: 'moduleName' },
+    { label: '操作', value: 'operation' },
+    { label: '内容', value: 'detail' },
+    { label: '操作账号', value: 'username' },
+    { label: '操作时间', value: 'createTime' }
+  ], filteredRows.value)
+}
+
 onMounted(load)
 </script>
 
 <style scoped>
+.toolbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .pagination {
   margin-top: 14px;
   justify-content: flex-end;

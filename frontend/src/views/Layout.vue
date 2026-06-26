@@ -4,7 +4,13 @@
       <div class="brand">实验室预约系统</div>
       <el-menu router :default-active="$route.path" background-color="#ffffff">
         <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
-          {{ item.title }}
+          <span>{{ item.title }}</span>
+          <el-badge
+            v-if="menuBadge(item.path)"
+            class="menu-badge"
+            :value="menuBadge(item.path)"
+            :max="99"
+          />
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -22,12 +28,16 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { listEquipmentBorrows, listLabReservations } from '../api/modules'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+const reservationReminder = ref(0)
+const borrowReminder = ref(0)
 
 const menuMap = {
   ADMIN: [
@@ -61,11 +71,31 @@ const menuMap = {
 
 const menus = computed(() => menuMap[userStore.user?.role] || [])
 const roleName = computed(() => ({ ADMIN: '管理员', TEACHER: '教师审核员', STUDENT: '学生' }[userStore.user?.role] || '未知角色'))
+const menuBadge = path => {
+  if (path === '/lab-reservations') return reservationReminder.value
+  if (path === '/equipment-borrows') return borrowReminder.value
+  return 0
+}
+
+const loadReminders = async () => {
+  if (!userStore.user?.role) return
+  const [reservations, borrows] = await Promise.all([listLabReservations(), listEquipmentBorrows()])
+  if (userStore.user.role === 'STUDENT') {
+    reservationReminder.value = reservations.filter(item => ['APPROVED', 'REJECTED'].includes(item.status)).length
+    borrowReminder.value = borrows.filter(item => ['APPROVED', 'REJECTED', 'RETURNED'].includes(item.status)).length
+  } else {
+    reservationReminder.value = reservations.filter(item => item.status === 'PENDING').length
+    borrowReminder.value = borrows.filter(item => item.status === 'PENDING').length
+  }
+}
 
 const logout = () => {
   userStore.logout()
   router.push('/login')
 }
+
+onMounted(loadReminders)
+watch(() => route.fullPath, loadReminders)
 </script>
 
 <style scoped>
@@ -94,5 +124,14 @@ const logout = () => {
   gap: 14px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.menu-badge {
+  margin-left: auto;
+}
+
+:deep(.el-menu-item) {
+  display: flex;
+  gap: 8px;
 }
 </style>
