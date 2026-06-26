@@ -1,6 +1,5 @@
 package com.gltu.labreservation.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gltu.labreservation.common.ApiResponse;
 import com.gltu.labreservation.entity.Notice;
 import com.gltu.labreservation.entity.User;
@@ -36,13 +35,7 @@ public class NoticeController {
 
     @GetMapping
     public ApiResponse<List<Notice>> list(@RequestHeader("X-User-Role") String role) {
-        LambdaQueryWrapper<Notice> wrapper = new LambdaQueryWrapper<Notice>()
-                .orderByDesc(Notice::getStatus)
-                .orderByDesc(Notice::getCreateTime);
-        if (!"ADMIN".equalsIgnoreCase(role)) {
-            wrapper.in(Notice::getStatus, 1, 2);
-        }
-        return ApiResponse.success(noticeService.list(wrapper));
+        return ApiResponse.success(noticeService.listWithCache(role));
     }
 
     @PostMapping
@@ -50,6 +43,7 @@ public class NoticeController {
         notice.setPublisherId(userId);
         notice.setStatus(1);
         noticeService.save(notice);
+        noticeService.clearNoticeCache();
         record(userId, "公告管理", "发布公告", notice.getTitle());
         return ApiResponse.success();
     }
@@ -61,6 +55,7 @@ public class NoticeController {
         notice.setId(id);
         notice.setPublisherId(null);
         noticeService.updateById(notice);
+        noticeService.clearNoticeCache();
         record(userId, "公告管理", "编辑公告", "公告ID：" + id);
         return ApiResponse.success();
     }
@@ -89,6 +84,7 @@ public class NoticeController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id, @RequestHeader("X-User-Id") Long userId) {
         noticeService.removeById(id);
+        noticeService.clearNoticeCache();
         record(userId, "公告管理", "删除公告", "公告ID：" + id);
         return ApiResponse.success();
     }
@@ -98,6 +94,7 @@ public class NoticeController {
         notice.setId(id);
         notice.setStatus(status);
         noticeService.updateById(notice);
+        noticeService.clearNoticeCache();
     }
 
     private void record(Long userId, String moduleName, String operation, String detail) {

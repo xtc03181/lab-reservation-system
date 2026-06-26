@@ -4,7 +4,7 @@
 
 ## 技术栈
 
-- 后端：Spring Boot 3、MyBatis Plus、MySQL
+- 后端：Spring Boot 3、MyBatis Plus、MySQL、Redis
 - 前端：Vue 3、Element Plus、Axios、Pinia、Vue Router
 - 构建工具：Maven、Vite
 
@@ -25,6 +25,7 @@
 - 预约记录、设备借用记录、操作日志导出
 - 实验室预约日历视图
 - 待审核与审核结果提醒
+- Redis 缓存公告列表
 - 公告与数据统计扩展
 
 ## 角色设计
