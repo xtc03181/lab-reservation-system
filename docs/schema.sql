@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS lab_reservation DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE lab_reservation;
+SET NAMES utf8mb4;
 
 DROP TABLE IF EXISTS notice;
 DROP TABLE IF EXISTS sys_message;
