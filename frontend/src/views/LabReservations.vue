@@ -85,12 +85,27 @@
 
     <el-dialog v-model="visible" :title="form.id ? '修改实验室预约' : '新增实验室预约'" width="560px">
       <el-form :model="form" label-width="96px">
+        <el-alert
+          class="rule-tip"
+          :title="ruleTip"
+          type="info"
+          show-icon
+          :closable="false"
+        />
         <el-form-item label="申请人"><el-input :model-value="userName(userStore.user?.id)" disabled /></el-form-item>
         <el-form-item label="实验室">
           <el-select v-model="form.labId" placeholder="请选择实验室" style="width: 100%">
             <el-option v-for="item in labs" :key="item.id" :label="`${item.name}（${item.location || '未填位置'}）`" :value="item.id" />
           </el-select>
         </el-form-item>
+        <el-alert
+          v-if="selectedLabTip"
+          class="rule-tip"
+          :title="selectedLabTip"
+          type="success"
+          show-icon
+          :closable="false"
+        />
         <el-form-item label="开始时间"><el-date-picker v-model="form.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
         <el-form-item label="结束时间"><el-date-picker v-model="form.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
         <el-form-item label="用途"><el-input v-model.trim="form.purpose" type="textarea" :rows="4" /></el-form-item>
@@ -120,6 +135,7 @@ import {
   listLabReservations,
   listLabs,
   listUsers,
+  getActiveReservationRule,
   reviewLabReservation,
   updateLabReservation
 } from '../api/modules'
@@ -139,6 +155,7 @@ const reviewVisible = ref(false)
 const page = ref(1)
 const pageSize = ref(8)
 const calendarDate = ref(new Date())
+const reservationRule = ref(null)
 const form = reactive({ id: null, labId: null, startTime: '', endTime: '', purpose: '' })
 const reviewForm = reactive({ id: null, status: '', reviewOpinion: '' })
 
@@ -161,6 +178,33 @@ const noticeText = computed(() => {
 })
 const weekDays = ['日', '一', '二', '三', '四', '五', '六']
 const calendarTitle = computed(() => `${calendarDate.value.getFullYear()} 年 ${calendarDate.value.getMonth() + 1} 月`)
+const ruleTip = computed(() => {
+  const rule = reservationRule.value
+  if (!rule) return '正在读取预约规则'
+  return `最多提前 ${rule.maxAdvanceDays} 天预约，单次最长 ${rule.maxDurationHours} 小时，每人每天最多 ${rule.dailyLimit} 次，${rule.allowWeekend === 1 ? '允许' : '不允许'}周末预约`
+})
+const dayOptions = [
+  { label: '周一', value: 1 },
+  { label: '周二', value: 2 },
+  { label: '周三', value: 3 },
+  { label: '周四', value: 4 },
+  { label: '周五', value: 5 },
+  { label: '周六', value: 6 },
+  { label: '周日', value: 7 }
+]
+const parseOpenDays = value => String(value || '1,2,3,4,5').split(',').map(item => Number(item)).filter(Boolean)
+const openDayText = value => {
+  const values = parseOpenDays(value)
+  if (values.length === 5 && values.every(item => item >= 1 && item <= 5)) return '周一至周五'
+  if (values.length === 7) return '每天'
+  return values.map(value => dayOptions.find(item => item.value === value)?.label).filter(Boolean).join('、')
+}
+const shortTime = value => String(value || '').slice(0, 5)
+const selectedLabTip = computed(() => {
+  const lab = labs.value.find(item => item.id === form.labId)
+  if (!lab) return ''
+  return `${lab.name}开放时间：${openDayText(lab.openDays)} ${shortTime(lab.openStartTime || '08:00:00')}-${shortTime(lab.openEndTime || '18:00:00')}`
+})
 const calendarDays = computed(() => {
   const base = calendarDate.value
   const first = new Date(base.getFullYear(), base.getMonth(), 1)
@@ -186,11 +230,12 @@ const changeMonth = offset => {
 }
 
 const load = async () => {
-  const tasks = [listLabReservations(), listLabs()]
+  const tasks = [listLabReservations(), listLabs(), getActiveReservationRule()]
   if (userStore.user?.role !== 'STUDENT') tasks.push(listUsers())
-  const [reservationData, labData, userData = []] = await Promise.all(tasks)
+  const [reservationData, labData, ruleData, userData = []] = await Promise.all(tasks)
   rows.value = reservationData
   labs.value = labData
+  reservationRule.value = ruleData
   users.value = userData
 }
 
@@ -270,6 +315,10 @@ onMounted(load)
 
 .page-alert {
   margin-bottom: 14px;
+}
+
+.rule-tip {
+  margin-bottom: 16px;
 }
 
 .calendar-tools {

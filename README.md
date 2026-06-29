@@ -18,14 +18,18 @@
 
 - 用户登录
 - 实验室信息管理
+- 实验室开放星期和开放时间管理
 - 设备信息管理
 - 实验室预约申请
 - 设备借用申请
 - 管理员审核
+- 预约规则配置
 - 预约记录、设备借用记录、操作日志导出
 - 实验室预约日历视图
 - 待审核与审核结果提醒
+- 站内消息中心
 - Redis 缓存公告列表
+- Docker Compose 一键启动 MySQL、Redis、后端、前端
 - 公告与数据统计扩展
 
 ## 角色设计
@@ -53,3 +57,16 @@ npm run dev
 ```
 
 默认页面地址：`http://localhost:5173`
+
+## Docker 一键部署
+
+安装 Docker Desktop 后，在项目根目录运行：
+
+```bash
+docker compose up -d --build
+```
+
+启动后访问：
+
+- 前端页面：`http://localhost`
+- 后端接口：`http://localhost:8080/api`

@@ -11,6 +11,8 @@ import Notices from '../views/Notices.vue'
 import Users from '../views/Users.vue'
 import Profile from '../views/Profile.vue'
 import OperationLogs from '../views/OperationLogs.vue'
+import Messages from '../views/Messages.vue'
+import ReservationRules from '../views/ReservationRules.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +29,8 @@ const router = createRouter({
         { path: 'lab-reservations', component: LabReservations, meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
         { path: 'equipment-borrows', component: EquipmentBorrows, meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
         { path: 'notices', component: Notices, meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
+        { path: 'messages', component: Messages, meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
+        { path: 'reservation-rules', component: ReservationRules, meta: { roles: ['ADMIN'] } },
         { path: 'users', component: Users, meta: { roles: ['ADMIN'] } },
         { path: 'profile', component: Profile, meta: { roles: ['ADMIN', 'TEACHER', 'STUDENT'] } },
         { path: 'operation-logs', component: OperationLogs, meta: { roles: ['ADMIN'] } }

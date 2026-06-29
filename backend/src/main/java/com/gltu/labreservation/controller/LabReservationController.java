@@ -7,8 +7,10 @@ import com.gltu.labreservation.entity.LabReservation;
 import com.gltu.labreservation.entity.User;
 import com.gltu.labreservation.mapper.UserMapper;
 import com.gltu.labreservation.service.LabReservationService;
+import com.gltu.labreservation.service.MessageService;
 import com.gltu.labreservation.service.OperationLogService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,13 +27,16 @@ public class LabReservationController {
 
     private final LabReservationService reservationService;
     private final OperationLogService operationLogService;
+    private final MessageService messageService;
     private final UserMapper userMapper;
 
     public LabReservationController(LabReservationService reservationService,
                                     OperationLogService operationLogService,
+                                    MessageService messageService,
                                     UserMapper userMapper) {
         this.reservationService = reservationService;
         this.operationLogService = operationLogService;
+        this.messageService = messageService;
         this.userMapper = userMapper;
     }
 
@@ -50,6 +55,8 @@ public class LabReservationController {
                                     @RequestBody LabReservation reservation) {
         reservation.setUserId(userId);
         reservationService.create(reservation);
+        messageService.sendToRoles(List.of("TEACHER", "ADMIN"), "新的实验室预约待审核",
+                "学生提交了实验室预约申请，实验室ID：" + reservation.getLabId(), "LAB_RESERVATION");
         record(userId, "实验室预约", "新增预约", "提交实验室ID：" + reservation.getLabId());
         return ApiResponse.success();
     }
@@ -75,7 +82,13 @@ public class LabReservationController {
                                     @RequestHeader("X-User-Id") Long userId,
                                     @Valid @RequestBody ReviewRequest request) {
         request.setReviewerId(userId);
+        LabReservation reservation = reservationService.getById(id);
         reservationService.review(id, request);
+        if (reservation != null) {
+            messageService.send(reservation.getUserId(), "实验室预约审核结果",
+                    "你的实验室预约已" + ("APPROVED".equals(request.getStatus()) ? "通过" : "驳回")
+                            + "，审核意见：" + request.getReviewOpinion(), "LAB_RESERVATION");
+        }
         record(userId, "实验室预约", "审核预约", "预约ID：" + id + "，结果：" + request.getStatus());
         return ApiResponse.success();
     }

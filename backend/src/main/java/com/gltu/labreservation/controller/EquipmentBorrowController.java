@@ -7,8 +7,10 @@ import com.gltu.labreservation.entity.EquipmentBorrow;
 import com.gltu.labreservation.entity.User;
 import com.gltu.labreservation.mapper.UserMapper;
 import com.gltu.labreservation.service.EquipmentBorrowService;
+import com.gltu.labreservation.service.MessageService;
 import com.gltu.labreservation.service.OperationLogService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,13 +27,16 @@ public class EquipmentBorrowController {
 
     private final EquipmentBorrowService borrowService;
     private final OperationLogService operationLogService;
+    private final MessageService messageService;
     private final UserMapper userMapper;
 
     public EquipmentBorrowController(EquipmentBorrowService borrowService,
                                      OperationLogService operationLogService,
+                                     MessageService messageService,
                                      UserMapper userMapper) {
         this.borrowService = borrowService;
         this.operationLogService = operationLogService;
+        this.messageService = messageService;
         this.userMapper = userMapper;
     }
 
@@ -49,6 +54,8 @@ public class EquipmentBorrowController {
     public ApiResponse<Void> create(@RequestHeader("X-User-Id") Long userId, @RequestBody EquipmentBorrow borrow) {
         borrow.setUserId(userId);
         borrowService.create(borrow);
+        messageService.sendToRoles(List.of("TEACHER", "ADMIN"), "新的设备借用待审核",
+                "学生提交了设备借用申请，设备ID：" + borrow.getEquipmentId(), "EQUIPMENT_BORROW");
         record(userId, "设备借用", "新增借用", "设备ID：" + borrow.getEquipmentId());
         return ApiResponse.success();
     }
@@ -58,7 +65,18 @@ public class EquipmentBorrowController {
                                     @RequestHeader("X-User-Id") Long userId,
                                     @Valid @RequestBody ReviewRequest request) {
         request.setReviewerId(userId);
+        EquipmentBorrow borrow = borrowService.getById(id);
         borrowService.review(id, request);
+        if (borrow != null) {
+            String result = switch (request.getStatus()) {
+                case "APPROVED" -> "通过";
+                case "REJECTED" -> "驳回";
+                case "RETURNED" -> "归还确认";
+                default -> request.getStatus();
+            };
+            messageService.send(borrow.getUserId(), "设备借用处理结果",
+                    "你的设备借用申请已" + result + "，处理意见：" + request.getReviewOpinion(), "EQUIPMENT_BORROW");
+        }
         record(userId, "设备借用", "处理借用", "借用ID：" + id + "，结果：" + request.getStatus());
         return ApiResponse.success();
     }

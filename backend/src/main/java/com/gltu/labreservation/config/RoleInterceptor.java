@@ -82,6 +82,12 @@ public class RoleInterceptor implements HandlerInterceptor {
         if (path.contains("/operation-logs")) {
             return false;
         }
+        if (path.contains("/messages")) {
+            return true;
+        }
+        if (path.contains("/reservation-rules")) {
+            return "GET".equals(method);
+        }
 
         if (path.contains("/lab-reservations")) {
             if ("GET".equals(method)) {

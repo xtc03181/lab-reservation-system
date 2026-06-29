@@ -1,6 +1,7 @@
 package com.gltu.labreservation.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.time.LocalTime;
 
 @TableName("lab")
 public class Lab extends BaseEntity {
@@ -10,6 +11,9 @@ public class Lab extends BaseEntity {
     private Integer capacity;
     private String manager;
     private String description;
+    private String openDays;
+    private LocalTime openStartTime;
+    private LocalTime openEndTime;
     private Integer status;
 
     public String getName() {
@@ -52,6 +56,30 @@ public class Lab extends BaseEntity {
         this.description = description;
     }
 
+    public String getOpenDays() {
+        return openDays;
+    }
+
+    public void setOpenDays(String openDays) {
+        this.openDays = openDays;
+    }
+
+    public LocalTime getOpenStartTime() {
+        return openStartTime;
+    }
+
+    public void setOpenStartTime(LocalTime openStartTime) {
+        this.openStartTime = openStartTime;
+    }
+
+    public LocalTime getOpenEndTime() {
+        return openEndTime;
+    }
+
+    public void setOpenEndTime(LocalTime openEndTime) {
+        this.openEndTime = openEndTime;
+    }
+
     public Integer getStatus() {
         return status;
     }
@@ -60,4 +88,3 @@ public class Lab extends BaseEntity {
         this.status = status;
     }
 }
-

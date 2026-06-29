@@ -17,6 +17,9 @@
     <el-container>
       <el-header class="header">
         <span>{{ userStore.user?.realName || userStore.user?.username }}（{{ roleName }}）</span>
+        <el-badge :value="messageUnread" :max="99" :hidden="!messageUnread">
+          <el-button @click="$router.push('/messages')">消息中心</el-button>
+        </el-badge>
         <el-button @click="$router.push('/profile')">个人中心</el-button>
         <el-button @click="logout">退出</el-button>
       </el-header>
@@ -30,7 +33,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { listEquipmentBorrows, listLabReservations } from '../api/modules'
+import { listEquipmentBorrows, listLabReservations, unreadMessageCount } from '../api/modules'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
@@ -38,6 +41,7 @@ const route = useRoute()
 const userStore = useUserStore()
 const reservationReminder = ref(0)
 const borrowReminder = ref(0)
+const messageUnread = ref(0)
 
 const menuMap = {
   ADMIN: [
@@ -46,7 +50,9 @@ const menuMap = {
     { path: '/equipment', title: '设备管理' },
     { path: '/lab-reservations', title: '预约审核' },
     { path: '/equipment-borrows', title: '借用审核' },
+    { path: '/reservation-rules', title: '预约规则' },
     { path: '/notices', title: '公告管理' },
+    { path: '/messages', title: '消息中心' },
     { path: '/users', title: '用户管理' },
     { path: '/operation-logs', title: '操作日志' },
     { path: '/profile', title: '个人中心' }
@@ -56,6 +62,7 @@ const menuMap = {
     { path: '/lab-reservations', title: '预约审核' },
     { path: '/equipment-borrows', title: '借用审核' },
     { path: '/notices', title: '公告查看' },
+    { path: '/messages', title: '消息中心' },
     { path: '/profile', title: '个人中心' }
   ],
   STUDENT: [
@@ -65,6 +72,7 @@ const menuMap = {
     { path: '/lab-reservations', title: '我的预约' },
     { path: '/equipment-borrows', title: '我的借用' },
     { path: '/notices', title: '公告查看' },
+    { path: '/messages', title: '消息中心' },
     { path: '/profile', title: '个人中心' }
   ]
 }
@@ -74,12 +82,14 @@ const roleName = computed(() => ({ ADMIN: '管理员', TEACHER: '教师审核员
 const menuBadge = path => {
   if (path === '/lab-reservations') return reservationReminder.value
   if (path === '/equipment-borrows') return borrowReminder.value
+  if (path === '/messages') return messageUnread.value
   return 0
 }
 
 const loadReminders = async () => {
   if (!userStore.user?.role) return
-  const [reservations, borrows] = await Promise.all([listLabReservations(), listEquipmentBorrows()])
+  const [reservations, borrows, unread] = await Promise.all([listLabReservations(), listEquipmentBorrows(), unreadMessageCount()])
+  messageUnread.value = unread
   if (userStore.user.role === 'STUDENT') {
     reservationReminder.value = reservations.filter(item => ['APPROVED', 'REJECTED'].includes(item.status)).length
     borrowReminder.value = borrows.filter(item => ['APPROVED', 'REJECTED', 'RETURNED'].includes(item.status)).length

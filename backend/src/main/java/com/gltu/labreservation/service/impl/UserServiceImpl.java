@@ -17,7 +17,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         validateUser(user, true);
         if (!StringUtils.hasText(user.getPassword())) {
             user.setPassword(PasswordUtil.hash("Abc12345!"));
-        } else if (!user.getPassword().startsWith("SHA256:")) {
+        } else if (!PasswordUtil.isEncoded(user.getPassword())) {
             validatePassword(user.getPassword());
             user.setPassword(PasswordUtil.hash(user.getPassword()));
         }
@@ -31,7 +31,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void updateUser(Long id, User user) {
         validateUser(user, false);
         user.setId(id);
-        if (StringUtils.hasText(user.getPassword()) && !user.getPassword().startsWith("SHA256:")) {
+        if (StringUtils.hasText(user.getPassword()) && !PasswordUtil.isEncoded(user.getPassword())) {
             validatePassword(user.getPassword());
             user.setPassword(PasswordUtil.hash(user.getPassword()));
         } else if (!StringUtils.hasText(user.getPassword())) {
