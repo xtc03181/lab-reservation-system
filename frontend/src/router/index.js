@@ -1,18 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import Login from '../views/Login.vue'
-import Layout from '../views/Layout.vue'
-import Dashboard from '../views/Dashboard.vue'
-import Labs from '../views/Labs.vue'
-import Equipment from '../views/Equipment.vue'
-import LabReservations from '../views/LabReservations.vue'
-import EquipmentBorrows from '../views/EquipmentBorrows.vue'
-import Notices from '../views/Notices.vue'
-import Users from '../views/Users.vue'
-import Profile from '../views/Profile.vue'
-import OperationLogs from '../views/OperationLogs.vue'
-import Messages from '../views/Messages.vue'
-import ReservationRules from '../views/ReservationRules.vue'
+
+const Login = () => import('../views/Login.vue')
+const Layout = () => import('../views/Layout.vue')
+const Dashboard = () => import('../views/Dashboard.vue')
+const Labs = () => import('../views/Labs.vue')
+const Equipment = () => import('../views/Equipment.vue')
+const LabReservations = () => import('../views/LabReservations.vue')
+const EquipmentBorrows = () => import('../views/EquipmentBorrows.vue')
+const Notices = () => import('../views/Notices.vue')
+const Users = () => import('../views/Users.vue')
+const Profile = () => import('../views/Profile.vue')
+const OperationLogs = () => import('../views/OperationLogs.vue')
+const Messages = () => import('../views/Messages.vue')
+const ReservationRules = () => import('../views/ReservationRules.vue')
 
 const router = createRouter({
   history: createWebHistory(),

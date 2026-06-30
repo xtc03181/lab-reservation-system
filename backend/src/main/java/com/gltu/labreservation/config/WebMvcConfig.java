@@ -17,7 +17,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(roleInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/auth/login");
+                .excludePathPatterns(
+                        "/auth/login",
+                        "/auth/send-reset-code",
+                        "/auth/reset-password",
+                        "/actuator/health",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/doc.html",
+                        "/webjars/**"
+                );
     }
 }
-

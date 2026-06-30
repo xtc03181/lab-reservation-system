@@ -13,10 +13,14 @@ import com.gltu.labreservation.entity.User;
 import com.gltu.labreservation.mapper.PasswordResetCodeMapper;
 import com.gltu.labreservation.mapper.UserMapper;
 import com.gltu.labreservation.service.AuthService;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Random;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -31,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordResetCodeMapper resetCodeMapper;
     private final TokenStore tokenStore;
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
     private final String mailFrom;
     private final String mailPassword;
 
@@ -38,12 +43,14 @@ public class AuthServiceImpl implements AuthService {
                            PasswordResetCodeMapper resetCodeMapper,
                            TokenStore tokenStore,
                            ObjectProvider<JavaMailSender> mailSenderProvider,
+                           ObjectProvider<StringRedisTemplate> redisTemplateProvider,
                            @Value("${spring.mail.username:}") String mailFrom,
                            @Value("${spring.mail.password:}") String mailPassword) {
         this.userMapper = userMapper;
         this.resetCodeMapper = resetCodeMapper;
         this.tokenStore = tokenStore;
         this.mailSenderProvider = mailSenderProvider;
+        this.redisTemplateProvider = redisTemplateProvider;
         this.mailFrom = mailFrom;
         this.mailPassword = mailPassword;
     }
@@ -69,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void sendResetCode(SendResetCodeRequest request) {
         User user = findResetUser(request.getUsername(), request.getEmail());
+        enforceResetCodeRateLimit(user);
         PasswordResetCode latest = resetCodeMapper.selectOne(new LambdaQueryWrapper<PasswordResetCode>()
                 .eq(PasswordResetCode::getAccount, user.getUsername())
                 .eq(PasswordResetCode::getReceiver, user.getEmail())
@@ -125,6 +133,22 @@ public class AuthServiceImpl implements AuthService {
 
         resetCode.setUsed(1);
         resetCodeMapper.updateById(resetCode);
+    }
+
+    private void enforceResetCodeRateLimit(User user) {
+        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate == null) {
+            return;
+        }
+        String key = "lab-reservation:reset-code:limit:" + user.getId();
+        try {
+            Boolean allowed = redisTemplate.opsForValue().setIfAbsent(key, "1", Duration.ofSeconds(60));
+            if (Boolean.FALSE.equals(allowed)) {
+                throw new BizException("验证码发送太频繁，请 60 秒后再试");
+            }
+        } catch (RedisConnectionFailureException | RedisSystemException exception) {
+            System.out.println("Redis reset code rate limit unavailable, fallback to database check: " + exception.getMessage());
+        }
     }
 
     private User findResetUser(String username, String email) {
