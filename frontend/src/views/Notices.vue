@@ -8,8 +8,13 @@
       </div>
     </div>
     <div class="panel">
-      <el-table :data="pagedRows" border>
-        <el-table-column prop="title" label="标题" width="240" />
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 条公告</span>
+        <span>置顶 <strong>{{ filteredRows.filter(row => row.status === 2).length }}</strong> 条</span>
+        <span>已发布 <strong>{{ filteredRows.filter(row => row.status === 1).length }}</strong> 条</span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无公告数据" row-class-name="notice-row" @row-click="openViewDialog">
+        <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
         <el-table-column label="内容">
           <template #default="{ row }">
             <div class="notice-content">{{ row.content }}</div>
@@ -24,12 +29,12 @@
         <el-table-column prop="createTime" label="发布时间" width="180" />
         <el-table-column v-if="isAdmin" label="操作" width="300">
           <template #default="{ row }">
-            <el-button size="small" @click="openDialog(row)">编辑</el-button>
-            <el-button v-if="row.status !== 2" size="small" type="success" @click="setPinned(row.id)">置顶</el-button>
-            <el-button v-else size="small" @click="setNormal(row.id)">取消置顶</el-button>
-            <el-button v-if="row.status !== 0" size="small" type="warning" @click="setOffline(row.id)">下架</el-button>
-            <el-button v-else size="small" type="success" @click="setNormal(row.id)">上架</el-button>
-            <el-button size="small" type="danger" @click="remove(row.id)">删除</el-button>
+            <el-button size="small" @click.stop="openDialog(row)">编辑</el-button>
+            <el-button v-if="row.status !== 2" size="small" type="success" @click.stop="setPinned(row.id)">置顶</el-button>
+            <el-button v-else size="small" @click.stop="setNormal(row.id)">取消置顶</el-button>
+            <el-button v-if="row.status !== 0" size="small" type="warning" @click.stop="setOffline(row.id)">下架</el-button>
+            <el-button v-else size="small" type="success" @click.stop="setNormal(row.id)">上架</el-button>
+            <el-button size="small" type="danger" @click.stop="remove(row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -52,6 +57,23 @@
         <el-button type="primary" @click="save">{{ form.id ? '保存' : '发布' }}</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="viewVisible" title="公告详情" width="680px">
+      <div v-if="activeNotice" class="notice-detail">
+        <div class="notice-detail-head">
+          <div class="notice-detail-meta">
+            <el-tag :type="statusType(activeNotice.status)">{{ statusText(activeNotice.status) }}</el-tag>
+            <span>发布人ID：{{ activeNotice.publisherId }}</span>
+          </div>
+          <span>{{ activeNotice.createTime }}</span>
+        </div>
+        <h3>{{ activeNotice.title }}</h3>
+        <div class="notice-detail-content">{{ activeNotice.content }}</div>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="viewVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -68,6 +90,8 @@ const keyword = ref('')
 const page = ref(1)
 const pageSize = ref(8)
 const visible = ref(false)
+const viewVisible = ref(false)
+const activeNotice = ref(null)
 const form = reactive({ id: null, title: '', content: '', status: 1 })
 
 const statusText = status => ({ 0: '已下架', 1: '已发布', 2: '置顶' }[status] || '未知')
@@ -86,6 +110,11 @@ const load = async () => {
 const openDialog = row => {
   Object.assign(form, row ? { id: row.id, title: row.title, content: row.content, status: row.status } : { id: null, title: '', content: '', status: 1 })
   visible.value = true
+}
+
+const openViewDialog = row => {
+  activeNotice.value = row
+  viewVisible.value = true
 }
 
 const save = async () => {
@@ -128,18 +157,54 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar-actions {
-  display: flex;
-  gap: 10px;
+:deep(.notice-row) {
+  cursor: pointer;
 }
 
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
+:deep(.notice-row:hover .notice-content) {
+  color: #1d4ed8;
 }
 
 .notice-content {
-  line-height: 1.7;
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.notice-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.notice-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.notice-detail h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 20px;
+}
+
+.notice-detail-content {
+  max-height: 52vh;
+  overflow: auto;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.9;
   white-space: pre-wrap;
   word-break: break-word;
 }

@@ -11,33 +11,149 @@ body {
 
 .page-title {
   margin: 0 0 16px;
+  color: #111827;
   font-size: 22px;
   font-weight: 700;
+  letter-spacing: 0;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .panel {
-  padding: 18px;
+  padding: 20px 22px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
-.status-pending {
-  color: #b7791f;
+.pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
 }
 
-.status-approved {
-  color: #047857;
+.table-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #64748b;
+  font-size: 13px;
 }
 
-.status-rejected {
-  color: #b91c1c;
+.table-summary span {
+  padding: 4px 10px;
+  background: #f8fafc;
+  border: 1px solid #e6ebf2;
+  border-radius: 999px;
 }
 
+.table-summary strong {
+  margin: 0 2px;
+  color: #1d4ed8;
+}
+
+.el-table {
+  --el-table-border-color: #e6ebf2;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-header-text-color: #475569;
+  --el-table-row-hover-bg-color: #f8fbff;
+  color: #334155;
+  font-size: 14px;
+}
+
+.el-table th.el-table__cell {
+  height: 48px;
+  font-weight: 700;
+}
+
+.el-table td.el-table__cell {
+  height: 52px;
+}
+
+.el-table .cell {
+  line-height: 1.6;
+}
+
+.el-table .el-button + .el-button {
+  margin-left: 6px;
+}
+
+.el-tag {
+  min-width: 64px;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.el-dialog {
+  border-radius: 8px;
+}
+
+.el-dialog__header {
+  padding: 20px 24px 12px;
+  margin-right: 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.el-dialog__title {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.el-dialog__body {
+  padding: 22px 24px 8px;
+}
+
+.el-dialog__footer {
+  padding: 14px 24px 20px;
+  border-top: 1px solid #eef2f7;
+}
+
+.el-dialog .el-form-item {
+  margin-bottom: 18px;
+}
+
+.el-dialog .el-input,
+.el-dialog .el-select,
+.el-dialog .el-date-editor.el-input,
+.el-dialog .el-date-editor.el-input__wrapper,
+.el-dialog .el-input-number {
+  width: 100%;
+}
+
+.table-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.muted-text {
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+  }
+}

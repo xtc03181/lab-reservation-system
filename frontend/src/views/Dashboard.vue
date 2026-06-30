@@ -104,7 +104,7 @@
         <span>置顶优先显示</span>
       </div>
       <div class="notice-list">
-        <div v-for="item in latestNotices" :key="item.id" class="notice-item">
+        <div v-for="item in latestNotices" :key="item.id" class="notice-item clickable" @click="openNotice(item)">
           <el-tag v-if="item.status === 2" type="warning">置顶</el-tag>
           <el-tag v-else type="success">公告</el-tag>
           <div>
@@ -116,6 +116,21 @@
         <el-empty v-if="!latestNotices.length" description="暂无公告" :image-size="80" />
       </div>
     </section>
+
+    <el-dialog v-model="noticeVisible" title="公告详情" width="680px">
+      <div v-if="activeNotice" class="notice-detail">
+        <div class="notice-detail-head">
+          <el-tag v-if="activeNotice.status === 2" type="warning">置顶</el-tag>
+          <el-tag v-else type="success">公告</el-tag>
+          <span>{{ activeNotice.createTime }}</span>
+        </div>
+        <h3>{{ activeNotice.title }}</h3>
+        <div class="notice-detail-content">{{ activeNotice.content }}</div>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="noticeVisible = false">我知道了</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -130,6 +145,8 @@ const equipment = ref([])
 const reservations = ref([])
 const borrows = ref([])
 const notices = ref([])
+const noticeVisible = ref(false)
+const activeNotice = ref(null)
 
 const text = {
   admin: '\u7cfb\u7edf\u7ba1\u7406\u5458',
@@ -231,6 +248,11 @@ const latestNotices = computed(() => [...notices.value]
   .sort((a, b) => (b.status || 0) - (a.status || 0) || (b.id || 0) - (a.id || 0))
   .slice(0, 4))
 
+const openNotice = notice => {
+  activeNotice.value = notice
+  noticeVisible.value = true
+}
+
 onMounted(async () => {
   const [labList, equipmentList, reservationList, borrowList, noticeList] = await Promise.all([
     listLabs(),
@@ -304,31 +326,66 @@ onMounted(async () => {
 }
 
 .stat-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 16px;
   min-height: 118px;
   padding: 20px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e3eaf3;
   border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.stat-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  content: "";
+  background: linear-gradient(90deg, #2563eb, #0f766e);
+  border-radius: 8px 8px 0 0;
+}
+
+.stat-card:hover {
+  border-color: #cbdaf0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .stat-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   flex: 0 0 auto;
   place-items: center;
-  color: #ffffff;
-  font-weight: 700;
-  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  border-radius: 12px;
 }
 
-.stat-icon.blue { background: #2563eb; }
-.stat-icon.green { background: #059669; }
-.stat-icon.orange { background: #d97706; }
-.stat-icon.red { background: #dc2626; }
+.stat-icon.blue {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.stat-icon.green {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.stat-icon.orange {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.stat-icon.red {
+  color: #b91c1c;
+  background: #fee2e2;
+}
 
 .stat-title {
   color: #6b7280;
@@ -338,8 +395,9 @@ onMounted(async () => {
 .stat-value {
   margin-top: 6px;
   color: #111827;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
+  line-height: 1.1;
 }
 
 .stat-note {
@@ -519,6 +577,17 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
+.notice-item.clickable {
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.notice-item.clickable:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
 .todo-item div,
 .notice-item div {
   min-width: 0;
@@ -544,6 +613,32 @@ onMounted(async () => {
 
 .notice-item {
   grid-template-columns: auto 1fr 180px;
+}
+
+.notice-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.notice-detail h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 20px;
+}
+
+.notice-detail-content {
+  max-height: 52vh;
+  overflow: auto;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 1100px) {

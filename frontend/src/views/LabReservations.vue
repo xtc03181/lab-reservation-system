@@ -26,6 +26,11 @@
         show-icon
         :closable="false"
       />
+      <div v-if="viewMode === 'table'" class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 条预约</span>
+        <span>待审核 <strong>{{ filteredRows.filter(row => row.status === 'PENDING').length }}</strong> 条</span>
+        <span>已通过 <strong>{{ filteredRows.filter(row => row.status === 'APPROVED').length }}</strong> 条</span>
+      </div>
       <div v-if="viewMode === 'calendar'" class="calendar-tools">
         <el-button @click="changeMonth(-1)">上个月</el-button>
         <strong>{{ calendarTitle }}</strong>
@@ -46,16 +51,16 @@
           </div>
         </div>
       </div>
-      <el-table v-else :data="pagedRows" border>
-        <el-table-column label="申请人">
+      <el-table v-else :data="pagedRows" border stripe empty-text="暂无预约记录">
+        <el-table-column label="申请人" min-width="110" show-overflow-tooltip>
           <template #default="{ row }">{{ userName(row.userId) }}</template>
         </el-table-column>
-        <el-table-column label="实验室">
+        <el-table-column label="实验室" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">{{ labName(row.labId) }}</template>
         </el-table-column>
         <el-table-column prop="startTime" label="开始时间" width="180" />
         <el-table-column prop="endTime" label="结束时间" width="180" />
-        <el-table-column prop="purpose" label="用途" />
+        <el-table-column prop="purpose" label="用途" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
@@ -106,8 +111,8 @@
           show-icon
           :closable="false"
         />
-        <el-form-item label="开始时间"><el-date-picker v-model="form.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
-        <el-form-item label="结束时间"><el-date-picker v-model="form.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
+        <el-form-item label="开始时间"><el-date-picker v-model="form.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="请选择开始时间" /></el-form-item>
+        <el-form-item label="结束时间"><el-date-picker v-model="form.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="请选择结束时间" /></el-form-item>
         <el-form-item label="用途"><el-input v-model.trim="form.purpose" type="textarea" :rows="4" /></el-form-item>
       </el-form>
       <template #footer>
@@ -301,18 +306,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-
 .page-alert {
   margin-bottom: 14px;
 }

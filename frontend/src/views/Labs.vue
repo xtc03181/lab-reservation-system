@@ -8,20 +8,27 @@
       </div>
     </div>
     <div class="panel">
-      <el-table :data="pagedRows" border>
-        <el-table-column prop="name" label="实验室名称" />
-        <el-table-column prop="location" label="位置" />
-        <el-table-column prop="capacity" label="容量" />
-        <el-table-column prop="manager" label="负责人" />
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 间实验室</span>
+        <span>开放 <strong>{{ filteredRows.filter(row => row.status === 1).length }}</strong> 间</span>
+        <span>停用 <strong>{{ filteredRows.filter(row => row.status !== 1).length }}</strong> 间</span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无实验室数据">
+        <el-table-column prop="name" label="实验室名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="location" label="位置" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="capacity" label="容量" width="90" />
+        <el-table-column prop="manager" label="负责人" min-width="110" show-overflow-tooltip />
         <el-table-column label="开放星期" width="180">
           <template #default="{ row }">{{ openDayText(row.openDays) }}</template>
         </el-table-column>
         <el-table-column label="开放时间" width="150">
           <template #default="{ row }">{{ timeRangeText(row) }}</template>
         </el-table-column>
-        <el-table-column prop="description" label="介绍" />
-        <el-table-column label="状态">
-          <template #default="{ row }">{{ row.status === 1 ? '开放' : '停用' }}</template>
+        <el-table-column prop="description" label="介绍" min-width="180" show-overflow-tooltip />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '开放' : '停用' }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column v-if="isAdmin" label="操作" width="170">
           <template #default="{ row }">
@@ -38,7 +45,7 @@
         v-model:current-page="page"
       />
     </div>
-    <el-dialog v-model="visible" title="实验室信息" width="520px">
+    <el-dialog v-model="visible" title="实验室信息" width="560px">
       <el-form :model="form" label-width="92px">
         <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="位置"><el-input v-model="form.location" /></el-form-item>
@@ -66,7 +73,7 @@
             />
           </div>
         </el-form-item>
-        <el-form-item label="介绍"><el-input v-model="form.description" type="textarea" /></el-form-item>
+        <el-form-item label="介绍"><el-input v-model="form.description" type="textarea" :rows="4" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="visible = false">取消</el-button>
@@ -177,16 +184,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-
 .time-range {
   display: flex;
   align-items: center;

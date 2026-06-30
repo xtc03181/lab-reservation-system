@@ -8,13 +8,21 @@
       </div>
     </div>
     <div class="panel">
-      <el-table :data="pagedRows" border>
-        <el-table-column prop="username" label="账号" />
-        <el-table-column prop="realName" label="姓名" />
-        <el-table-column prop="phone" label="电话" />
-        <el-table-column prop="email" label="邮箱" min-width="180" />
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 个用户</span>
+        <span>启用 <strong>{{ filteredRows.filter(row => row.status === 1).length }}</strong> 个</span>
+        <span>教师 <strong>{{ filteredRows.filter(row => row.role === 'TEACHER').length }}</strong> 个</span>
+        <span>学生 <strong>{{ filteredRows.filter(row => row.role === 'STUDENT').length }}</strong> 个</span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无用户数据">
+        <el-table-column prop="username" label="账号" min-width="130" show-overflow-tooltip />
+        <el-table-column prop="realName" label="姓名" min-width="110" show-overflow-tooltip />
+        <el-table-column prop="phone" label="电话" min-width="130" show-overflow-tooltip />
+        <el-table-column prop="email" label="邮箱" min-width="190" show-overflow-tooltip />
         <el-table-column label="角色" width="130">
-          <template #default="{ row }">{{ roleText(row.role) }}</template>
+          <template #default="{ row }">
+            <el-tag :type="roleTagType(row.role)">{{ roleText(row.role) }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
@@ -86,6 +94,7 @@ const visible = ref(false)
 const form = reactive({ id: null, username: '', realName: '', phone: '', email: '', role: 'STUDENT', status: 1, password: '' })
 
 const roleText = role => ({ ADMIN: '管理员', TEACHER: '教师审核员', STUDENT: '学生' }[role] || role)
+const roleTagType = role => ({ ADMIN: 'danger', TEACHER: 'warning', STUDENT: 'primary' }[role] || 'info')
 const isStrongPassword = password =>
   Boolean(password)
   && password.length >= 8
@@ -135,16 +144,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-
 .password-tip {
   width: 100%;
   margin-top: 6px;

@@ -13,7 +13,12 @@
     </div>
 
     <div class="panel">
-      <el-table :data="pagedRows" border>
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 条消息</span>
+        <span>未读 <strong>{{ filteredRows.filter(row => row.readStatus === 0).length }}</strong> 条</span>
+        <span>已读 <strong>{{ filteredRows.filter(row => row.readStatus === 1).length }}</strong> 条</span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无消息数据">
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="row.readStatus === 0 ? 'danger' : 'info'">
@@ -21,8 +26,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="标题" width="200" />
-        <el-table-column prop="content" label="内容" />
+        <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="content" label="内容" min-width="260" show-overflow-tooltip />
         <el-table-column label="类型" width="130">
           <template #default="{ row }">{{ typeText(row.type) }}</template>
         </el-table-column>
@@ -78,14 +83,4 @@ const readAll = async () => {
 onMounted(load)
 </script>
 
-<style scoped>
-.toolbar-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-</style>
+<style scoped></style>

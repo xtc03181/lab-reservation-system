@@ -22,17 +22,22 @@
         show-icon
         :closable="false"
       />
-      <el-table :data="pagedRows" border>
-        <el-table-column label="申请人">
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 条借用</span>
+        <span>待审核 <strong>{{ filteredRows.filter(row => row.status === 'PENDING').length }}</strong> 条</span>
+        <span>已归还 <strong>{{ filteredRows.filter(row => row.status === 'RETURNED').length }}</strong> 条</span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无借用记录">
+        <el-table-column label="申请人" min-width="110" show-overflow-tooltip>
           <template #default="{ row }">{{ userName(row.userId) }}</template>
         </el-table-column>
-        <el-table-column label="设备">
+        <el-table-column label="设备" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">{{ equipmentName(row.equipmentId) }}</template>
         </el-table-column>
         <el-table-column prop="borrowCount" label="数量" width="90" />
         <el-table-column prop="borrowTime" label="借用时间" width="180" />
         <el-table-column prop="returnTime" label="归还时间" width="180" />
-        <el-table-column prop="purpose" label="用途" />
+        <el-table-column prop="purpose" label="用途" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
@@ -69,8 +74,8 @@
           </el-select>
         </el-form-item>
         <el-form-item label="数量"><el-input-number v-model="form.borrowCount" :min="1" /></el-form-item>
-        <el-form-item label="借用时间"><el-date-picker v-model="form.borrowTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
-        <el-form-item label="归还时间"><el-date-picker v-model="form.returnTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
+        <el-form-item label="借用时间"><el-date-picker v-model="form.borrowTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="请选择借用时间" /></el-form-item>
+        <el-form-item label="归还时间"><el-date-picker v-model="form.returnTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="请选择归还时间" /></el-form-item>
         <el-form-item label="用途"><el-input v-model.trim="form.purpose" type="textarea" :rows="4" /></el-form-item>
       </el-form>
       <template #footer>
@@ -191,18 +196,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-
 .page-alert {
   margin-bottom: 14px;
 }

@@ -8,13 +8,18 @@
       </div>
     </div>
     <div class="panel">
-      <el-table :data="pagedRows" border>
-        <el-table-column prop="name" label="设备名称" />
-        <el-table-column prop="code" label="编号" />
-        <el-table-column prop="labId" label="实验室ID" />
-        <el-table-column prop="model" label="型号" />
-        <el-table-column prop="totalCount" label="总数" />
-        <el-table-column prop="availableCount" label="可借" />
+      <div class="table-summary">
+        <span>共 <strong>{{ filteredRows.length }}</strong> 台设备</span>
+        <span>可借库存 <strong>{{ filteredRows.reduce((sum, row) => sum + Number(row.availableCount || 0), 0) }}</strong></span>
+        <span>总库存 <strong>{{ filteredRows.reduce((sum, row) => sum + Number(row.totalCount || 0), 0) }}</strong></span>
+      </div>
+      <el-table :data="pagedRows" border stripe empty-text="暂无设备数据">
+        <el-table-column prop="name" label="设备名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="code" label="编号" min-width="130" show-overflow-tooltip />
+        <el-table-column prop="labId" label="实验室ID" width="110" />
+        <el-table-column prop="model" label="型号" min-width="130" show-overflow-tooltip />
+        <el-table-column prop="totalCount" label="总数" width="90" />
+        <el-table-column prop="availableCount" label="可借" width="90" />
         <el-table-column v-if="isAdmin" label="操作" width="170">
           <template #default="{ row }">
             <el-button size="small" @click="openDialog(row)">编辑</el-button>
@@ -30,7 +35,7 @@
         v-model:current-page="page"
       />
     </div>
-    <el-dialog v-model="visible" title="设备信息" width="520px">
+    <el-dialog v-model="visible" title="设备信息" width="560px">
       <el-form :model="form" label-width="92px">
         <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="编号"><el-input v-model="form.code" /></el-form-item>
@@ -102,14 +107,4 @@ const remove = async id => {
 onMounted(load)
 </script>
 
-<style scoped>
-.toolbar-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 14px;
-  justify-content: flex-end;
-}
-</style>
+<style scoped></style>
